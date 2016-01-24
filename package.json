@@ -1,0 +1,26 @@
+{
+    "name": "node-red-contrib-transmission",
+    "version": "0.3.0",
+    "description": "Manage transmission BT with Node-RED",
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:Belphemur/node-red-contrib-transmission"
+    },
+    "keywords": [
+        "data",
+        "node-red"
+    ],
+    "author": "Antoine Aflalo <antoineaf+npm@admincmd.com>",
+    "license": "GPLv3",
+    "homepage": "https://github.com/Belphemur/node-red-contrib-transmission",
+    "dependencies": {
+        "when": "3.x.x",
+        "transmission":"0.4.x"
+    },
+    "node-red": {
+        "nodes": {
+            "transmission-get": "1-transmission-get.js",
+            "transmission-add": "0-transmission-add.js"
+        }
+    }
+}

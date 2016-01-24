@@ -1,0 +1,80 @@
+<!--
+  Copyright 2014 Antoine Aflalo
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+
+<script type="text/x-red" data-template-name="BT get">
+    <div class="form-row" id="node-input-server-row">
+        <label for="node-input-server"><i class="icon-tasks"></i> Server</label>
+        <input type="text" id="node-input-server">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-flag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Node-RED">
+    </div>
+        <div class="form-row">
+        <label for="node-input-status"><i class="icon-th-list"></i> Status of torrents</label>
+        <select id="node-input-status">
+            <option value="all">All</option>
+            <option value="STOPPED">Stopped</option>
+            <option value="CHECK_WAIT">Queued to check files</option>
+            <option value="CHECK">Checking files</option>
+            <option value="DOWNLOAD_WAIT">Queued to download</option>
+            <option value="WAIT">Downloading</option>
+            <option value="SEED_WAIT">Queued to seed</option>
+            <option value="SEED">Seeding</option>
+            <option value="ISOLATED">No peer found</option>
+        </select>
+    </div>
+
+
+</script>
+<script type="text/x-red" data-help-name="BT get">
+<p>Use BT get to connect to your TransmissionBT client on which the RPC server is configured.
+ Once connected the node fetch a list of torrent corresponding to your set criteria.</p>
+    <p>The node outputs the Torrents fetched in <code>msg.torrents</code> as an array of torrent.
+    Each torrent bear the ID that has been assigned by Transmission.</p>
+    <p> <h2>Example:</h2>
+    <code> var torrentID = msg.torrents[0].id; </code></p>
+    <p>If there is no result for the request, the array will be empty. </p>
+    <p>If you want to get information about a specific torrents set the <code>msg.torrentsID</code> to the ID assignated
+    to your torrent by Transmission in an array</p>
+    <p><h2>Example:</h2>
+    <code> msg.torrentsID = [1,6,7];</code></p>
+
+</script>
+
+<script type="text/javascript">
+     RED.nodes.registerType('BT get', {
+        category: 'advanced-function',
+        defaults: {
+            server: {type: "transmission-server", required:true},
+            name: {value: ""},
+            status: {value: "", required:true}
+        },
+        color: "red",
+        inputs: 1,
+        outputs: 1,
+        icon: "icon-transmission.png",
+        align: "right",
+        label: function () {
+            return this.name || (this.server)? RED.nodes.node(this.server).label():"Get Torrent";;
+        },
+        labelStyle: function () {
+            return this.name ? "node_label_italic" : "";
+        }
+
+    });
+</script>

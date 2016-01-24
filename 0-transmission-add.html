@@ -1,0 +1,109 @@
+<!--
+  Copyright 2014 Antoine Aflalo
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<script type="text/x-red" data-template-name="BT add">
+    <div class="form-row" id="node-input-server-row">
+        <label for="node-input-server"><i class="icon-tasks"></i> Server</label>
+        <input type="text" id="node-input-server">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-flag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Node-RED">
+    </div>
+        <div class="form-row">
+        <label for="node-input-location"><i class="icon-floppy-save"></i> Location</label>
+        <input type="text" id="node-input-location" placeholder="/home/transmission/">
+    </div>
+
+
+</script>
+<script type="text/x-red" data-help-name="BT add">
+<p>Use BT add to connect to your TransmissionBT client on which the RPC server is configured.
+ Once connected the node will add the torrent to download.</p>
+    <p>The node expects to receive the URL of the torrent into the <code>msg.payload</code>.</p>
+    <p>The URL can either be either pointing to a .torrent file or it can be a magnetic link.</p>
+    <p>The node outputs the Torrent created by transmission on successful addition.
+    The Torrent is set as <code>msg.torrent</code>.</p>
+    <p>TransmissionBT is assigning an ID to the torrent that need to be kept to interact later with the same torrent.
+    It can be found in <code>msg.torrent.id</code>.</p>
+
+</script>
+
+        <script type="text/x-red" data-template-name="transmission-server">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="icon-flag"></i>Name</label>
+        <input type="text" id="node-config-input-name" >
+    </div>
+        <div class="form-row">
+        <label for="node-config-input-host"><i class="icon-cloud"></i>Server host</label>
+        <input type="text" id="node-config-input-host" >
+    </div>
+        <div class="form-row">
+        <label for="node-config-input-port"><i class="icon-log-in"></i>Port</label>
+        <input type="text" id="node-config-input-port" placeholder="9091" >
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-user"><i class="icon-user"></i>Username</label>
+        <input type="text" id="node-config-input-user" >
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-password"><i class="icon-asterisk"></i>Password</label>
+        <input type="password" id="node-config-input-password" >
+    </div>
+    <div class="form-tips">Depending of your configuration, you may not need to set an username and password.</div>
+</script>
+
+<script type="text/javascript">
+
+    RED.nodes.registerType('transmission-server', {
+        category: 'config',
+        defaults: {
+            name: {value: "", required: true},
+            host: {value:"", required:true},
+            port: {value:"", required:true, validate:RED.validators.regex(/^[0-9]{2,5}/)}
+            //user: -> credentials
+            //password -> credentials
+        },
+        credentials : {
+            user : {type: "text"},
+            password : {type : "password"}
+        },
+        label: function () {
+            return this.name;
+        }
+    });
+
+    RED.nodes.registerType('BT add', {
+        category: 'advanced-function',
+        defaults: {
+            server: {type: "transmission-server", required:true},
+            name: {value: ""},
+            location: {value: ""}
+        },
+        color: "red",
+        inputs: 1,
+        outputs: 1,
+        icon: "icon-transmission.png",
+        align: "right",
+        label: function () {
+            return this.name || (this.server)? RED.nodes.node(this.server).label():"Add Torrent";;
+        },
+        labelStyle: function () {
+            return this.name ? "node_label_italic" : "";
+        }
+
+    });
+</script>
