@@ -16,8 +16,19 @@
 
 module.exports = function (RED) {
     "use strict";
+    if (!String.prototype.startsWith) {
+        String.prototype.startsWith = function (searchString, position) {
+            position = position || 0;
+            return this.indexOf(searchString, position) === position;
+        };
+    }
+
     var Transmission = require('transmission');
     var when = require("when");
+    var wget = require('wget-improved');
+    var os = require('os');
+    var path = require('path');
+    var defaultFilePath = os.tmpdir();
 
 
     function TransmissionServerNode(n) {
@@ -55,6 +66,83 @@ module.exports = function (RED) {
         var node = this;
 
         /**
+         * Download a file.
+         * @param url
+         * @returns {Promise} contains the file path of the downloaded file
+         * @constructor
+         */
+        function DownloadTorrentFile(url) {
+            var splited = url.split('/');
+            var fileName = splited[splited.length - 1];
+            var output = path.join(defaultFilePath, fileName);
+            var deferred = when.defer();
+            var download = wget.download(url, output);
+            download.on("error", function (error) {
+                deferred.reject(error);
+            });
+            download.on("ends", function (outputFile) {
+                deferred.resolve(outputFile);
+            });
+            return deferred.promise;
+        }
+
+        /**
+         * Return a promise with the ID of the added torrent
+         * @param url
+         * @param options
+         * @returns {Promise}
+         * @constructor
+         */
+        function AddTorrentUrl(url, options) {
+            var deferred = when.defer();
+            node.server.transmission.addUrl(url, options, function (err, result) {
+                if (err) {
+                    deferred.reject(err);
+                    return;
+                }
+                deferred.resolve(result.id);
+            });
+            return deferred.promise;
+        }
+
+        /**
+         * Return a promise with the ID of the added torrent
+         * @param path
+         * @param options
+         * @returns {Promise}
+         * @constructor
+         */
+        function AddTorrentPath(path, options) {
+            var deferred = when.defer();
+            node.server.transmission.addFile(path, options, function (err, result) {
+                if (err) {
+                    deferred.reject(err);
+                    return;
+                }
+                deferred.resolve(result.id);
+            });
+            return deferred.promise;
+        }
+
+        /**
+         * Get a torrent from it's ID
+         * @param id
+         * @returns {Promise}
+         * @constructor
+         */
+        function GetTorrentFromId(id) {
+            var deferred = when.defer();
+            node.server.transmission.get(id, function (err, result) {
+                if (err) {
+                    deferred.reject(err);
+                    return;
+                }
+                deferred.resolve(result.torrents[0]);
+            });
+            return deferred.promise;
+        }
+
+        /**
          *
          * @param url
          * @param options
@@ -62,24 +150,23 @@ module.exports = function (RED) {
          * @constructor
          */
         function PromiseAddTorrent(url, options) {
-            var deferred = when.defer();
-            node.server.transmission.add(url, options, function (err, result) {
-                if (err) {
-                    node.error(err);
-                    deferred.reject(err);
-                    return;
-                }
-                var id = result.id;
-                node.server.transmission.get(id, function (err, result) {
-                    if (err) {
-                        node.error(err);
-                        deferred.reject(err);
-                        return;
-                    }
-                    deferred.resolve(result.torrents[0]);
-                })
-            });
-            return deferred.promise;
+            if (url.startsWith('http')) {
+                return DownloadTorrentFile(url).then(function (outputFile) {
+                    return AddTorrentPath(outputFile, options).then(function (id) {
+                        return GetTorrentFromId(id);
+                    }, function (error) {
+                        node.error(error);
+                    })
+                }, function (error) {
+                    node.error(error);
+                });
+            } else {
+                return AddTorrentUrl(url, options).then(function (id) {
+                    return GetTorrentFromId(id);
+                }, function (error) {
+                    node.error(error);
+                });
+            }
         }
 
 
@@ -100,14 +187,14 @@ module.exports = function (RED) {
             if (Array.isArray(url)) {
                 var promises = [];
                 url.forEach(function (element) {
-                    promises.push(PromiseAddTorrent(element, options));
+                    promises.push(PromiseAddTorrent(element.trim(), options));
                 });
                 when.all(promises).then(function (torrents) {
                     msg.torrent = torrents;
                     node.send(msg);
                 });
             } else {
-               PromiseAddTorrent(url, options).then(function(torrent) {
+                PromiseAddTorrent(url.trim(), options).then(function (torrent) {
                    msg.torrent = torrent;
                    node.send(msg);
                });
