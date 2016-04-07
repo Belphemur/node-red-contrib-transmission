@@ -80,7 +80,7 @@ module.exports = function (RED) {
             download.on("error", function (error) {
                 deferred.reject(error);
             });
-            download.on("ends", function (outputFile) {
+            download.on("end", function (outputFile) {
                 deferred.resolve(outputFile);
             });
             return deferred.promise;
