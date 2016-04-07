@@ -107,23 +107,14 @@ module.exports = function (RED) {
                     node.send(msg);
                 });
             } else {
-                node.server.transmission.add(url, options, function (err, result) {
-                    if (err) {
-                        return node.error(err);
-                    }
-                    var id = result.id;
-                    node.server.transmission.get(id, function (err, result) {
-                        if (err) {
-                            return node.error(err);
-                        }
-                        msg.torrent = result.torrents[0];
-                        node.send(msg);
-                    })
-                })
+               PromiseAddTorrent(url, options).then(function(torrent) {
+                   msg.torrent = torrent;
+                   node.send(msg);
+               });
             }
 
         });
     }
 
     RED.nodes.registerType("BT add", TransmissionDownloadNode);
-}
+};
