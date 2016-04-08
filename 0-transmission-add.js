@@ -81,8 +81,8 @@ module.exports = function (RED) {
             download.on("error", function (error) {
                 deferred.reject(error);
             });
-            download.on("end", function (outputFile) {
-                deferred.resolve(outputFile);
+            download.on("end", function () {
+                deferred.resolve(output);
             });
             return deferred.promise;
         }
