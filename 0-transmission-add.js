@@ -144,36 +144,53 @@ module.exports = function (RED) {
         }
 
         /**
+         * Delete a file and return a promise for it.
+         * @param path
+         * @returns {Promise}
+         * @constructor
+         */
+        function DeleteFile(path) {
+            var deferred = when.defer();
+            fs.unlink(outputFile, function (error) {
+                if (error) {
+                    deferred.reject(error);
+                    return;
+                }
+                deferred.resolve();
+            });
+            return deferred.promise;
+        }
+
+        /**
          * Add the torrent to download and return a promise
          * @param url
          * @param options
          * @param download
-         * @returns {when.promise}
+         * @returns {Promise}
          * @constructor
          */
         function PromiseAddTorrent(url, options, download) {
             if (url.startsWith('http') && download) {
+                var file;
                 return DownloadTorrentFile(url).then(function (outputFile) {
-                    return AddTorrentPath(outputFile, options).then(function (id) {
-                        fs.unlink(outputFile, function (error) {
-                            if (error) {
-                                node.error(error);
-                            }
-                        });
-                        return GetTorrentFromId(id)
-                    }, function (error) {
-                        node.error(error);
-                    })
-                }, function (error) {
-                    node.error(error);
-                });
-            } else {
-                return AddTorrentUrl(url, options).then(function (id) {
-                    return GetTorrentFromId(id);
-                }, function (error) {
+                    file = outputFile;
+                    return AddTorrentPath(outputFile, options);
+                }).then(function (id) {
+                    return GetTorrentFromId(id)
+                }).then(function (torrent) {
+                    return DeleteFile(file).then(function () {
+                        return when.resolve(torrent);
+                    });
+                }).catch(function (error) {
                     node.error(error);
                 });
             }
+
+            return AddTorrentUrl(url, options).then(function (id) {
+                return GetTorrentFromId(id);
+            }, function (error) {
+                node.error(error);
+            });
         }
 
 
