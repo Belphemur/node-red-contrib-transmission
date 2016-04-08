@@ -144,14 +144,15 @@ module.exports = function (RED) {
         }
 
         /**
-         *
+         * Add the torrent to download and return a promise
          * @param url
          * @param options
+         * @param download
          * @returns {when.promise}
          * @constructor
          */
-        function PromiseAddTorrent(url, options) {
-            if (url.startsWith('http')) {
+        function PromiseAddTorrent(url, options, download) {
+            if (url.startsWith('http') && download) {
                 return DownloadTorrentFile(url).then(function (outputFile) {
                     return AddTorrentPath(outputFile, options).then(function (id) {
                         fs.unlink(outputFile, function (error) {
@@ -191,14 +192,14 @@ module.exports = function (RED) {
             if (Array.isArray(url)) {
                 var promises = [];
                 url.forEach(function (element) {
-                    promises.push(PromiseAddTorrent(element.trim(), options));
+                    promises.push(PromiseAddTorrent(element.trim(), options, msg.download));
                 });
                 when.all(promises).then(function (torrents) {
                     msg.torrent = torrents;
                     node.send(msg);
                 });
             } else {
-                PromiseAddTorrent(url.trim(), options).then(function (torrent) {
+                PromiseAddTorrent(url.trim(), options, msg.download).then(function (torrent) {
                    msg.torrent = torrent;
                    node.send(msg);
                });
