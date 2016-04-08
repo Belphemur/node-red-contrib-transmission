@@ -23,12 +23,13 @@ module.exports = function (RED) {
         };
     }
 
-    var Transmission = require('transmission');
-    var when = require("when");
-    var wget = require('wget-improved');
-    var os = require('os');
-    var path = require('path');
-    var defaultFilePath = os.tmpdir();
+    const fs = require('fs');
+    const Transmission = require('transmission');
+    const when = require("when");
+    const wget = require('wget-improved');
+    const os = require('os');
+    const path = require('path');
+    const defaultFilePath = os.tmpdir();
 
 
     function TransmissionServerNode(n) {
@@ -153,7 +154,10 @@ module.exports = function (RED) {
             if (url.startsWith('http')) {
                 return DownloadTorrentFile(url).then(function (outputFile) {
                     return AddTorrentPath(outputFile, options).then(function (id) {
-                        return GetTorrentFromId(id);
+                        fs.unlink(outputFile, function (error) {
+                            node.error(error);
+                        });
+                        return GetTorrentFromId(id)
                     }, function (error) {
                         node.error(error);
                     })
