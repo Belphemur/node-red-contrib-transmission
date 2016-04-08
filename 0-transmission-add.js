@@ -156,7 +156,9 @@ module.exports = function (RED) {
                 return DownloadTorrentFile(url).then(function (outputFile) {
                     return AddTorrentPath(outputFile, options).then(function (id) {
                         fs.unlink(outputFile, function (error) {
-                            node.error(error);
+                            if (error) {
+                                node.error(error);
+                            }
                         });
                         return GetTorrentFromId(id)
                     }, function (error) {
@@ -200,9 +202,9 @@ module.exports = function (RED) {
                 });
             } else {
                 PromiseAddTorrent(url.trim(), options, msg.download).then(function (torrent) {
-                   msg.torrent = torrent;
-                   node.send(msg);
-               });
+                    msg.torrent = torrent;
+                    node.send(msg);
+                });
             }
 
         });
