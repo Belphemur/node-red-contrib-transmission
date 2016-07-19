@@ -181,15 +181,11 @@ module.exports = function (RED) {
                     return DeleteFile(file).then(function () {
                         return when.resolve(torrent);
                     });
-                }).catch(function (error) {
-                    node.error(error);
                 });
             }
 
             return AddTorrentUrl(url, options).then(function (id) {
                 return GetTorrentFromId(id);
-            }, function (error) {
-                node.error(error);
             });
         }
 
@@ -216,11 +212,15 @@ module.exports = function (RED) {
                 when.all(promises).then(function (torrents) {
                     msg.torrent = torrents;
                     node.send(msg);
+                }).catch(function (error) {
+                    node.error(error);
                 });
             } else {
                 PromiseAddTorrent(url.trim(), options, msg.download).then(function (torrent) {
                     msg.torrent = torrent;
                     node.send(msg);
+                }).catch(function (error) {
+                    node.error(error);
                 });
             }
 
