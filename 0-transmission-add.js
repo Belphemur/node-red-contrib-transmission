@@ -151,7 +151,7 @@ module.exports = function (RED) {
          */
         function DeleteFile(path) {
             var deferred = when.defer();
-            fs.unlink(outputFile, function (error) {
+            fs.unlink(path, function (error) {
                 if (error) {
                     deferred.reject(error);
                     return;
