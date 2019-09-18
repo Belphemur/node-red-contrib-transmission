@@ -201,7 +201,7 @@ module.exports = function (RED) {
             }
 
             if (msg.dlgroup) {
-                options["downloadGroup"] = msg.dlgroup;
+                options["labels"] = msg.dlgroup;
             }
 
             if (Array.isArray(url)) {
